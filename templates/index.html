@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diabetes Risk Prediction</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    input.invalid {
+      border: 2px solid red;
+    }
+  </style>
+  <script>
+    function validateForm() {
+      let isValid = true;
+      const form = document.forms["diabetesForm"];
+      
+      // Clear all previous errors and remove red borders
+      const errorElements = document.querySelectorAll(".error");
+      errorElements.forEach(el => el.style.display = "none");
+
+      const inputs = form.querySelectorAll("input");
+      inputs.forEach(input => input.classList.remove("invalid"));
+
+      // Get input values
+      const pregnancies = parseFloat(form["Pregnancies"].value);
+      const glucose = parseFloat(form["Glucose"].value);
+      const bloodPressure = parseFloat(form["BloodPressure"].value);
+      const skinThickness = parseFloat(form["SkinThickness"].value);
+      const insulin = parseFloat(form["Insulin"].value);
+      const bmi = parseFloat(form["BMI"].value);
+      const dpf = parseFloat(form["DiabetesPedigreeFunction"].value);
+      const age = parseFloat(form["Age"].value);
+
+      // Age validation
+      if (age <= 0 || !Number.isInteger(age)) {
+        document.getElementById("ageError").style.display = "block";
+        form["Age"].classList.add("invalid");
+        isValid = false;
+      }
+
+      // Glucose validation
+      if (glucose <= 0) {
+        document.getElementById("glucoseError").style.display = "block";
+        form["Glucose"].classList.add("invalid");
+        isValid = false;
+      }
+
+      // DPF validation
+      if (dpf < 0 || dpf > 10) {
+        document.getElementById("dpfError").style.display = "block";
+        form["DiabetesPedigreeFunction"].classList.add("invalid");
+        isValid = false;
+      }
+
+      // Other fields positivity
+      if (pregnancies < 0) { document.getElementById("pregError").style.display = "block"; form["Pregnancies"].classList.add("invalid"); isValid = false; }
+      if (bloodPressure < 0) { document.getElementById("bpError").style.display = "block"; form["BloodPressure"].classList.add("invalid"); isValid = false; }
+      if (skinThickness < 0) { document.getElementById("skinError").style.display = "block"; form["SkinThickness"].classList.add("invalid"); isValid = false; }
+      if (insulin < 0) { document.getElementById("insulinError").style.display = "block"; form["Insulin"].classList.add("invalid"); isValid = false; }
+      if (bmi < 0) { document.getElementById("bmiError").style.display = "block"; form["BMI"].classList.add("invalid"); isValid = false; }
+
+      return isValid;
+    }
+  </script>
+</head>
+<body>
+  <div style="max-width:500px; margin:auto; padding:20px; text-align:center;">
+    <h2>Pima Indians Diabetes Risk Prediction</h2>
+    <form name="diabetesForm" action="/predict" method="POST" onsubmit="return validateForm()">
+
+      <label>Pregnancies:</label><br>
+      <input type="number" name="Pregnancies" step="1" min="0" placeholder="3" required>
+      <div class="error" id="pregError">Pregnancies must be 0 or higher.</div><br>
+
+      <label>Glucose:</label><br>
+      <input type="number" name="Glucose" step="any" min="0.1" placeholder="120" required>
+      <div class="error" id="glucoseError">Glucose must be greater than 0.</div><br>
+
+      <label>Blood Pressure:</label><br>
+      <input type="number" name="BloodPressure" step="any" min="0" placeholder="70" required>
+      <div class="error" id="bpError">Blood Pressure must be positive.</div><br>
+
+      <label>Skin Thickness:</label><br>
+      <input type="number" name="SkinThickness" step="any" min="0" placeholder="25" required>
+      <div class="error" id="skinError">Skin Thickness must be positive.</div><br>
+
+      <label>Insulin:</label><br>
+      <input type="number" name="Insulin" step="any" min="0" placeholder="80" required>
+      <div class="error" id="insulinError">Insulin must be positive.</div><br>
+
+      <label>BMI:</label><br>
+      <input type="number" name="BMI" step="any" min="0" placeholder="28.5" required>
+      <div class="error" id="bmiError">BMI must be positive.</div><br>
+
+      <label>Diabetes Pedigree Function:</label><br>
+      <input type="number" name="DiabetesPedigreeFunction" step="any" min="0" max="3" placeholder="1" required>
+      <div class="error" id="dpfError">DPF is continuous value.</div><br>
+
+      <label>Age:</label><br>
+      <input type="number" name="Age" step="1" min="1" placeholder="33" required>
+      <div class="error" id="ageError">Age must be a positive whole number.</div><br>
+
+      <button type="submit">Calculate</button>
+    </form>
+
+    {% if prediction_text %}
+      <h4 style="margin-top:20px; 
+                 color:{% if prediction_text == 'Low risk of diabetes' %}green{% else %}red{% endif %};">
+        {{ prediction_text }}
+      </h4>
+    {% endif %}
+  </div>
+</body>
+</html>
